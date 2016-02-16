@@ -16,13 +16,18 @@ def main():
 
     workbook = xlsxwriter.Workbook(name + ".xlsx")
     worksheet = workbook.add_worksheet(name)
-
+    xlsx_format = workbook.add_format()
+    xlsx_format.set_bg_color('gray')
     pattern = r"^/"
     dirpattern = re.compile(pattern)
     pattern = r"^total "
     totalpattern = re.compile(pattern)
     pattern = r" +"
     spacepattern = re.compile(pattern)
+    pattern = r".png|.jpg|.gif"
+    pngpattern = re.compile(pattern)
+    pattern = r"200[0-9]|2015"
+    yearpattern = re.compile(pattern)
 
     with open(log) as f_obj:
         line = f_obj.readline()
@@ -54,15 +59,31 @@ def main():
             else:
                 line = spacepattern.sub(" ", line)
                 split_line = line.split(" ")
+                # Permission
                 worksheet.write(count, 1, split_line[0])
+                # Hardlink
                 worksheet.write(count, 2, split_line[1])
+                # User
                 worksheet.write(count, 3, split_line[2])
+                # Group
                 worksheet.write(count, 4, split_line[3])
+                # Byte
                 worksheet.write(count, 5, split_line[4])
+                # Month
                 worksheet.write(count, 6, split_line[5])
+                # Day
                 worksheet.write(count, 7, split_line[6])
-                worksheet.write(count, 8, split_line[7])
-                worksheet.write(count, 9, str(split_line[8:]))
+                # Year or Time
+                if yearpattern.match(split_line[7]):
+                    worksheet.write(count, 8, split_line[7], xlsx_format)
+                else:
+                    worksheet.write(count, 8, split_line[7])
+                # Filename
+                filename = " ".join(split_line[8:])
+                if pngpattern.search(filename):
+                    worksheet.write(count, 9, filename, xlsx_format)
+                else:
+                    worksheet.write(count, 9, filename)
             line = f_obj.readline()
             count += 1
 
